@@ -366,5 +366,106 @@ int is_redirection_token(TokenType type) {
            type == TOKEN_REDIR_APPEND || type == TOKEN_HEREDOC;
 }
 
+
 ```
 
+char *input;
+int position;
+
+Token get_next_token() {
+    Token token;
+    char current_char;
+
+    // Skip whitespace
+    while (isspace(input[position])) {
+        position++;
+    }
+
+    if (input[position] == '\0') {
+        token.type = TOKEN_EOF;
+        return token;
+    }
+
+    current_char = input[position];
+    position++;
+
+    switch (current_char) {
+        case '\'':
+            token.type = TOKEN_SINGLE_QUOTE;
+            break;
+        case '"':
+            token.type = TOKEN_DOUBLE_QUOTE;
+            break;
+        case '<':
+            if (input[position] == '<') {
+                token.type = TOKEN_HEREDOC;
+                position++;
+            } else {
+                token.type = TOKEN_REDIR_IN;
+            }
+            break;
+        case '>':
+            if (input[position] == '>') {
+                token.type = TOKEN_REDIR_APPEND;
+                position++;
+            } else {
+                token.type = TOKEN_REDIR_OUT;
+            }
+            break;
+        case '|':
+            if (input[position] == '|') {
+                token.type = TOKEN_OR;
+                position++;
+            } else {
+                token.type = TOKEN_PIPE;
+            }
+            break;
+        case '&':
+            if (input[position] == '&') {
+                token.type = TOKEN_AND;
+                position++;
+            } else {
+                // Error: single '&' not supported
+                token.type = TOKEN_EOF;
+            }
+            break;
+        case '(':
+            token.type = TOKEN_LPAREN;
+            break;
+        case ')':
+            token.type = TOKEN_RPAREN;
+            break;
+        case '*':
+            token.type = TOKEN_WILDCARD;
+            break;
+        case '$':
+            if (input[position] == '?') {
+                token.type = TOKEN_EXIT_STATUS;
+                position++;
+            } else {
+                token.type = TOKEN_ENV_VAR;
+                // Collect the variable name
+                int start = position;
+                while (isalnum(input[position]) || input[position] == '_') {
+                    position++;
+                }
+                token.value = strndup(&input[start], position - start);
+            }
+            break;
+        default:
+            if (isalnum(current_char) || current_char == '_') {
+                token.type = TOKEN_WORD;
+                int start = position - 1;
+                while (isalnum(input[position]) || input[position] == '_') {
+                    position++;
+                }
+                token.value = strndup(&input[start], position - start);
+            } else {
+                // Error: unknown character
+                token.type = TOKEN_EOF;
+            }
+            break;
+    }
+
+    return token;
+}
