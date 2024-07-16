@@ -366,6 +366,7 @@ int is_redirection_token(TokenType type) {
            type == TOKEN_REDIR_APPEND || type == TOKEN_HEREDOC;
 }
 
+```
 
 ```c
 
