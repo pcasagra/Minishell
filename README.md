@@ -367,7 +367,7 @@ int is_redirection_token(TokenType type) {
 }
 
 
-```
+```c
 
 char *input;
 int position;
@@ -469,3 +469,5 @@ Token get_next_token() {
 
     return token;
 }
+
+```
